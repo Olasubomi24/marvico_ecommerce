@@ -184,7 +184,7 @@ class Utility extends MX_Controller {
         $data = [
             'customerName' => $register_name,
             'phoneNumber' => $phonenumber,
-            'mainPhoneNumber' => $customer_id
+            'mainPhoneNumber' => $phonenumber
         ];
         
         $data_json = json_encode($data); // Convert $data array to JSON
@@ -296,7 +296,7 @@ class Utility extends MX_Controller {
             // Generate account number based on customer details (can be dynamic if needed)
             $customer_id = "01000000168";  
             // For now, hardcode the account number or use a function to generate it
-            $getCampaignDetails = '897654304';
+            $getCampaignDetails = '8976543045';
             $complete_status = '1';
     
             // SQL Insert Query for new transaction
