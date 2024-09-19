@@ -176,7 +176,7 @@ class Utility extends MX_Controller {
         // Set the API URL and headers
         $url = 'https://zippyworld.net/zippy_event_third_party/v1/api/create_account';
         $header = [
-            'x-api-key: 6128892',
+           
             'Content-Type: application/json'
         ];
         
