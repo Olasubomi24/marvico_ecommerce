@@ -129,7 +129,7 @@
                                     </li>
                                     <li>
                                         <div class="subtotal-line">
-                                            <b class="stt-name">Shipping</b>
+                                            <b class="stt-name">Services Charge</b>
                                             <span class="stt-price"># <?php echo $shipping; ?></span>
                                         </div>
                                     </li>
@@ -201,7 +201,7 @@
                     <div class="summary">
                         <p><strong>User ID:</strong> <?php echo $user_id; ?></p>
                         <p><strong>Subtotal:</strong> #<?php echo $subtotal; ?></p>
-                        <p><strong>Shipping:</strong> #<?php echo $shipping; ?></p>
+                        <p><strong>Services Charge:</strong> #<?php echo $shipping; ?></p>
                         <p><strong>Tax:</strong> #<?php echo $tax; ?></p>
                         <p><strong>Total Amount:</strong> #<?php echo $total; ?></p>
                     </div>

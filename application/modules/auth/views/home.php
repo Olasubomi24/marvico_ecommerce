@@ -112,7 +112,7 @@
                                             </div>
                                             <div class="info">
                                                 <b
-                                                    class="categories"><?php echo htmlspecialchars($product['package_name']); ?></b>
+                                                    class="categories"><?php echo htmlspecialchars($product['package_name']); ?> (<?php echo htmlspecialchars($product['measurement']); ?>)</b>
                                                 <h4 class="product-title"><a href=""
                                                         class="pr-name"><?php echo htmlspecialchars($product['product_name']); ?></a>
                                                 </h4>

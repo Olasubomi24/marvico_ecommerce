@@ -112,7 +112,7 @@ class Auth extends MX_Controller {
         $subtotal = array_sum(array_column($product_results, 'total_amount'));
     
         // Define shipping and tax (these values could be dynamic based on your logic)
-        $shipping = 20.00; // Example value
+        $shipping = 250.00; // Example value
         $tax = 0.00; // Example value
     
         // Calculate the total amount
