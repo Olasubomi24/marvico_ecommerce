@@ -1,3 +1,9 @@
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include Bootstrap JS if using Bootstrap modals -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+
 <body class="biolife-body">
 
     <!-- Preloader -->
@@ -214,30 +220,38 @@
         </div>
     </div>
 </div>
-
-<!-- AJAX Payment Processing -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-$('#paymentForm').on('submit', function(event) {
-    event.preventDefault();
+$(document).ready(function() {
+    $('#paymentForm').on('submit', function(event) {
+        event.preventDefault();  // Prevent the default form submission
 
-    $.ajax({
-        url: '<?php echo base_url('auth/process_payment'); ?>',
-        type: 'POST',
-        data: $(this).serialize(),
-        success: function(response) {
-            var result = JSON.parse(response);
-            if (result.success) {
-                window.location.href = result.redirect_url;
-            } else {
-                alert(result.message);
+        $.ajax({
+            url: '<?php echo base_url("auth/process_payment"); ?>',  // Correct URL path
+            type: 'POST',
+            data: $(this).serialize(),  // Send form data
+            success: function(response) {
+                console.log('AJAX response:', response); // Log the response
+                try {
+                    var result = JSON.parse(response);  // Parse JSON response
+                    if (result.success) {
+                        // Redirect on success
+                        window.location.href = result.redirect_url;  
+                    } else {
+                        alert(result.message);  // Show error message
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Payment process error:', error);  // Log the error
             }
-        },
-        error: function(xhr, status, error) {
-            console.error('Payment process error:', error);
-        }
+        });
     });
 });
 </script>
+
 
     <!-- Scroll Top Button -->
     <a class="btn-scroll-top"><i class="biolife-icon icon-left-arrow"></i></a>
@@ -245,63 +259,7 @@ $('#paymentForm').on('submit', function(event) {
 
 </body>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- <script>
-    let productItems = JSON.stringify([
-    {
-        "user_id": "user_66e3d7e79dc011.44653918",
-        "product_name": "Marvico Curry Powder",
-        "product_image": null,
-        "quantity": "1",
-        "price": "460.00",
-        "total_amount": "460.00"
-    },
-    {
-        "user_id": "user_66e3d7e79dc011.44653918",
-        "product_name": "Marvico Curry Powder",
-        "product_image": null,
-        "quantity": "1",
-        "price": "1470.00",
-        "total_amount": "1470.00"
-    }
-    // Add more product items as needed
-]);
 
-document.querySelector('input[name="product_items"]').value = productItems;
 
-</script> -->
+<!-- AJAX Payment Processing -->
 
-<!-- <script>$.ajax({
-    url: '<?php echo base_url('auth/process_payment'); ?>',
-    type: 'POST',
-    data: {
-        // Send your form data here
-        user_id: $('#user_id').val(),
-        register_name: $('#register_name').val(),
-        phone_number: $('#phone_number').val(),
-        email: $('#email').val(),
-        product_items: $('#product_items').val(),
-        subtotal: $('#subtotal').val(),
-        shipping: $('#shipping').val(),
-        tax: $('#tax').val(),
-        total_amount: $('#total_amount').val()
-    },
-    success: function(response) {
-        // Parse the response from the server
-        var result = JSON.parse(response);
-        
-        // Check if the transaction was successful
-        if (result.success) {
-            // Redirect to the provided URL
-            window.location.href = result.redirect_url;
-        } else {
-            alert(result.message);  // Show an error message if the transaction failed
-        }
-    },
-    error: function(xhr, status, error) {
-        // Handle any errors that occurred during the AJAX request
-        console.error('Payment process error:', error);
-    }
-});
-
-</script> -->

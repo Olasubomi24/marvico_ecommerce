@@ -8,7 +8,7 @@ class Auth extends MX_Controller {
     }
 
     // Method to check or generate user_id   success_page
-    private function checkUserSession() {
+    public  function checkUserSession() {
         // Check if user_id is already in session
         if (!$this->session->userdata('user_id')) {
             // Generate a new user_id
@@ -18,23 +18,20 @@ class Auth extends MX_Controller {
         }
         return $this->session->userdata('user_id');
     }
-
     public function success_page() {
+        $user_id = $this->checkUserSession();
         $encoded_aa = $this->input->get('aa');
         $result = json_decode(urldecode($encoded_aa), true);  // Decode and parse the JSON data
-       // $result = json_decode($results, true); // For JSON strings
-    //print_r($result); die;
-      //  $tmc_recent_donation_API = $this->utility->get_tmc_donation();
     
         $view_data = array(
             'title' => 'Dashboard',
             'content_view' => 'auth/success_page',
             'result' => $result,
-           // 'tmc_recent_donation' => $tmc_recent_donation_API['result'],
+            'user_id' => $user_id, // Pass the user ID to the view
         );
     
         // Load the general template and pass in the data
-        $this->template->general_template($view_data);
+        $this->template->general_template_for_admin($view_data);
     }
     
 
@@ -288,6 +285,48 @@ class Auth extends MX_Controller {
     }
     
 
+    // public function process_payment() {
+    //     // Collect form data
+    //     $user_id = $this->input->post('user_id');
+    //     $register_name = $this->input->post('register_name');
+    //     $phone_number = $this->input->post('phone_number');
+    //     $email = $this->input->post('email');
+    //     $product_items = $this->input->post('product_items');  // Expecting JSON string
+    //     $subtotal = $this->input->post('subtotal');
+    //     $shipping = $this->input->post('shipping');
+    //     $tax = $this->input->post('tax');
+    //     $total_amount = $this->input->post('total_amount');
+    
+    //     // Validate and process the payment
+    //     if ($user_id && $total_amount) {
+    //         // Save transaction using utility model
+    //         $transaction = $this->utility->save_transaction(
+    //             $user_id, $register_name, $phone_number, $email, 
+    //             $product_items, $subtotal, $shipping, $tax, $total_amount
+    //         );
+    //         log_message('debug', 'Payment data: ' . print_r($transaction, true));
+    
+    //         // If transaction saved successfully
+    //         if ($transaction) {
+    //             $transaction_json = urlencode(json_encode($transaction));
+    //             $redirect_url = base_url('auth/success_page') . '?aa=' . $transaction_json;
+            
+    //             log_message('debug', 'Redirect URL: ' . $redirect_url);
+                
+    //             redirect($redirect_url);
+    //             exit;  // Ensure no further processing occurs
+    //         } else {
+    //             log_message('error', 'Transaction failed to save for user_id: ' . $user_id);
+    //             redirect(base_url('auth/checkout'));
+    //             exit;
+    //         }
+             
+    //     } else {
+    //         // Redirect to checkout if user_id or total_amount are missing
+    //         $redirect_url = base_url('auth/checkout');
+    //         redirect($redirect_url);
+    //     }
+    // }
     public function process_payment() {
         // Collect form data
         $user_id = $this->input->post('user_id');
@@ -307,25 +346,33 @@ class Auth extends MX_Controller {
                 $user_id, $register_name, $phone_number, $email, 
                 $product_items, $subtotal, $shipping, $tax, $total_amount
             );
+            log_message('debug', 'Payment data: ' . print_r($transaction, true));
     
             // If transaction saved successfully
             if ($transaction) {
-                // Encode transaction as JSON and URL-encode it
                 $transaction_json = urlencode(json_encode($transaction));
-    
-                // Construct redirect URL with encoded transaction data
                 $redirect_url = base_url('auth/success_page') . '?aa=' . $transaction_json;
     
-                // Respond with success and redirect URL
-                echo json_encode(array('success' => true, 'redirect_url' => $redirect_url));
+                log_message('debug', 'Redirect URL: ' . $redirect_url);
+    
+                // Return success response
+                echo json_encode(['success' => true, 'redirect_url' => $redirect_url]);
+                return;
             } else {
-                // Respond with failure message
-                echo json_encode(array('success' => false, 'message' => 'Transaction failed. Please try again.'));
+                log_message('error', 'Transaction failed to save for user_id: ' . $user_id);
+                echo json_encode(['success' => false, 'message' => 'Transaction failed.']);
+                return;
             }
         } else {
-            echo json_encode(array('success' => false, 'message' => 'Invalid payment data.'));
+            // Return error response if user_id or total_amount are missing
+            echo json_encode(['success' => false, 'message' => 'Invalid data provided.']);
+            return;
         }
     }
+    
+    
+    
+
     
     
     

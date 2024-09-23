@@ -133,6 +133,273 @@
 </body>
 
 </html>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+<script>
+$(document).ready(function() {
+    var userId = <?php echo json_encode($user_id); ?>;
+
+    // Load cart items on page load
+    if (userId) {
+        loadCartItems(userId);
+    }
+
+    // Fetch cart items from the server and update the UI
+    function loadCartItems(userId) {
+        var url = '<?php echo base_url('auth/get_cart_items'); ?>';
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            data: {
+                user_id: userId
+            },
+            success: function(response) {
+                try {
+                    var data = JSON.parse(response);
+                    updateMiniCart(data);
+                    updateShoppingCart(data);
+                } catch (e) {
+                    console.error('Error parsing JSON response:', e);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching cart items:', status, error);
+            }
+        });
+    }
+
+    // Update mini cart UI
+    function updateMiniCart(items) {
+        var miniCartHtml = '';
+        var miniCartTotalQty = 0;
+        var miniCartSubtotal = 0;
+
+        items.forEach(function(item) {
+            var itemTotal = (item.quantity * item.price).toFixed(2);
+            miniCartHtml += `
+                <li>
+                    <div class="minicart-item" data-id="${item.product_id}" data-price="${item.price}">
+                        <div class="thumb">
+                            <a href=""><img src="${item.product_image}" alt="${item.product_name}" width="90" height="90"></a>
+                        </div>
+                        <div class="left-info">
+                            <div class="product-title"><a href="" class="product-name">${item.product_name}</a></div>
+                            <div class="price">
+                                <ins><span class="price-amount">#${parseFloat(item.price).toFixed(2)}</span></ins>
+                                <del><span class="price-amount">#${parseFloat(item.original_price).toFixed(2)}</span></del>
+                            </div>
+                            <div class="qty">
+                                <label for="cart[${item.product_id}][qty]">Qty:</label>
+                                <input type="number" class="input-qty" name="cart[${item.product_id}][qty]" id="cart[${item.product_id}][qty]" value="${item.quantity}" min="1" max="10" data-product-id="${item.product_id}">
+                            </div>
+                        </div>
+                        <div class="action">
+                            <a href="#" class="edit"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+                            <a href="#" class="remove-cart-item" data-product-id="${item.product_id}" data-price="${item.price}"><i class="fa fa-trash-o" aria-hidden="true"></i></a>
+                        </div>
+                    </div>
+                </li>
+            `;
+            miniCartTotalQty += item.quantity;
+            miniCartSubtotal += parseFloat(itemTotal);
+        });
+
+        $('.products').html(miniCartHtml);
+        $('#minicart-quantity').text(miniCartTotalQty.length - 1);
+        $('#minicart-total').text('#' + miniCartSubtotal.toFixed(2));
+
+        attachQuantityChangeHandler(); // Re-attach the quantity change handler
+    }
+
+    // Update shopping cart UI
+    function updateShoppingCart(items) {
+        var shoppingCartHtml = '';
+        var shoppingCartTotal = 0;
+
+        items.forEach(function(item) {
+            var itemTotal = (item.quantity * item.price).toFixed(2);
+            shoppingCartHtml += `
+                <tr class="cart-item" data-id="${item.product_id}" data-user-id="${userId}" data-price="${item.price}">
+                    <td class="product">
+                        <div class="product-thumb">
+                            <a href=""><img src="${item.product_image}" alt="${item.product_name}" width="90" height="90"></a>
+                        </div>
+                       
+                    </td>
+                      <td class="product">
+                        <h4 class="product-title"><a href="">${item.product_name}</a></h4>
+                    </td>
+                    <td class="price">
+                        <span>#${parseFloat(item.price).toFixed(2)}</span>
+                    </td>
+                    <td class="quantity">
+                        <input type="number" value="${item.quantity}" min="1" max="10" class="input-qty" data-product-id="${item.product_id}">
+                    </td>
+                    <td class="total">
+                        <span>#${itemTotal}</span>
+                    </td>
+                    <td class="remove">
+                        <a href="#" class="remove-cart-item" data-product-id="${item.product_id}" data-price="${item.price}"><i class="fa fa-trash"></i></a>
+                    </td>
+                </tr>
+            `;
+            shoppingCartTotal += parseFloat(itemTotal);
+        });
+
+        $('#shoppingcart-items').html(shoppingCartHtml);
+        $('#shoppingcart-total').text('#' + shoppingCartTotal.toFixed(2));
+
+        attachQuantityChangeHandler(); // Re-attach the quantity change handler
+    }
+
+    // Add item to cart
+    $('.add-to-cart-btn').on('click', function(event) {
+        event.preventDefault();
+
+        var productId = $(this).data('id');
+        var productName = $(this).data('name');
+        var productPrice = parseFloat($(this).data('price'));
+        var productImage = $(this).data('image');
+        var quantity = 1;
+        var totalAmount = productPrice * quantity;
+
+        addToCart(userId, productId, productName, productPrice, productImage, quantity, totalAmount);
+    });
+
+    function addToCart(userId, productId, productName, productPrice, productImage, quantity, totalAmount) {
+        var url = '<?php echo base_url('auth/save_carts'); ?>';
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                user_id: userId,
+                product_id: productId,
+                quantity: quantity,
+                price: productPrice.toFixed(2),
+                total_amount: totalAmount.toFixed(2),
+                product_name: productName,
+                product_image: productImage
+            },
+            success: function(response) {
+                try {
+                    var data = JSON.parse(response);
+                    if (data.status === 'success') {
+                        loadCartItems(userId); // Reload cart items
+                    } else {
+                        console.error('Server error:', data.message);
+                    }
+                } catch (e) {
+                    console.error('Error parsing JSON response:', e);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error adding to cart:', status, error);
+            }
+        });
+    }
+
+    // Function to attach quantity change handler to input fields
+    function attachQuantityChangeHandler() {
+        $('.input-qty').off('change').on('change', function() {
+            var newQuantity = parseInt($(this).val(), 10);
+            var oldQuantity = parseInt($(this).data('old-qty'), 10) || 1;
+            if (isNaN(newQuantity) || newQuantity <= 0) {
+                newQuantity = oldQuantity;
+                $(this).val(newQuantity);
+            }
+
+            if (newQuantity !== oldQuantity) {
+                var productId = $(this).data('product-id');
+                var price = parseFloat($(this).closest('.minicart-item, .cart-item').data('price'));
+                var totalAmount = (newQuantity * price).toFixed(2);
+
+                $('.minicart-item[data-id="' + productId + '"], .cart-item[data-id="' + productId + '"]').each(function() {
+                    $(this).find('.price ins span, .total span').text('#' + totalAmount);
+                    $(this).find('.input-qty').val(newQuantity);
+                });
+
+                saveCartToDatabase(userId, productId, newQuantity, price, totalAmount);
+                $(this).data('old-qty', newQuantity);
+            }
+        });
+    }
+
+    function saveCartToDatabase(userId, productId, quantity, price, totalAmount) {
+        var url = '<?php echo base_url('auth/save_carts'); ?>';
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                user_id: userId,
+                product_id: productId,
+                quantity: quantity,
+                price: parseFloat(price).toFixed(2),
+                total_amount: parseFloat(totalAmount).toFixed(2)
+            },
+            success: function(response) {
+                try {
+                    var data = JSON.parse(response);
+                    if (data.status === 'success') {
+                        loadCartItems(userId); // Reload cart items
+                    } else {
+                        console.error('Server error:', data.message);
+                    }
+                } catch (e) {
+                    console.error('Error parsing JSON response:', e);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error saving cart changes:', status, error);
+            }
+        });
+    }
+
+    // Remove cart item
+    $(document).on('click', '.remove-cart-item', function(event) {
+        event.preventDefault();
+
+        var productId = $(this).data('product-id');
+        var price = $(this).data('price');
+
+        if (confirm('Are you sure you want to remove this item from your cart?')) {
+            removeCartItem(productId, userId, price);
+        }
+    });
+
+    function removeCartItem(productId, userId, price) {
+        var url = '<?php echo base_url('auth/remove_cart_item'); ?>';
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                user_id: userId,
+                product_id: productId,
+                price: price
+            },
+            success: function(response) {
+                try {
+                    var data = JSON.parse(response);
+                    if (data.status === 'success') {
+                        loadCartItems(userId); // Reload cart items
+                    } else {
+                        console.error('Server error:', data.message);
+                    }
+                } catch (e) {
+                    console.error('Error parsing JSON response:', e);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error removing cart item:', status, error);
+            }
+        });
+    }
+});
+</script>
 
 
 
@@ -149,3 +416,5 @@ Swal.fire({
 });
 <?php } ?>
         </script>
+
+

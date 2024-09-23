@@ -26,7 +26,7 @@
                             <div class="text-content">
                                 <i class="first-line">Pomegranate</i>
                                 <h3 class="second-line">Our products are 100% Organic</h3>
-                                <p class="third-line">Most products are from University of Agriculture Abeokuta Farm</p>
+                                <p class="third-line">Most Product are sourced directly from manufacturer</br/> e.g. MARVINCO Foods and Federal University of Agriculture Abeokuta Farm</p>
                                 <p class="buttons">
                                     <a href="" class="btn btn-bold">Shop now</a>
                                     <a href="" class="btn btn-thin">View lookbook</a>
@@ -171,3 +171,5 @@
     <a class="btn-scroll-top"><i class="biolife-icon icon-left-arrow"></i></a>
 
 </body>
+
+

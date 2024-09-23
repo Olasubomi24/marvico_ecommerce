@@ -85,7 +85,7 @@ class Utility extends MX_Controller {
 
     public function checkout_products($user_id) {
         $sql = "SELECT user_id, product_name, product_image, quantity, price, total_amount 
-                FROM cart WHERE user_id = ?";
+                FROM cart WHERE user_id = ? and status ='1'";
         $result = $this->db->query($sql, array($user_id))->result_array();
         return array('status_code' => '0', 'message' => 'Successful', 'result' => $result);
     }
@@ -176,7 +176,7 @@ class Utility extends MX_Controller {
         // Set the API URL and headers
         $url = 'https://zippyworld.net/zippy_event_third_party/v1/api/create_account';
         $header = [
-           
+            'x-api-key: 6128892',
             'Content-Type: application/json'
         ];
         
@@ -255,7 +255,9 @@ class Utility extends MX_Controller {
     
     //     // Generate account number based on customer details
     //     $customer_id = "01000000168";  // Can be dynamic if needed
-    //     $getCampaignDetails = $this->generate_account_no($register_name, $phonenumbers, $customer_id);
+    //     $getCampaignDetail = $this->generate_account_no($register_name, $phonenumbers, $customer_id);
+    //     //$getCampaignDetails = $getCampaignDetail['account_number'];
+    //     $getCampaignDetails =  '8976543045';
     //     $query1 = "INSERT into marvico_food_txn (user_id, register_name, phone_number, email, product_items, subtotal, shipping, tax, total_amount, account_no)
     //                     VALUES('$user_id', '$register_name','$phone_number', '$email', '$product_items', '$subtotal', '$shipping', '$tax', '$total_amount', '$getCampaignDetails')";
     //      $query = "SELECT * FROM marvico_food_txn";
@@ -272,63 +274,35 @@ class Utility extends MX_Controller {
         $user_id, $register_name, $phone_number, $email, 
         $product_items, $subtotal, $shipping, $tax, $total_amount
     ) {
-        // First, check if a record with the same user_id, product_items, and completed_status exists
-        $query = "SELECT * FROM marvico_food_txn 
-                  WHERE user_id = ? 
-                  AND total_amount = ? 
-                  AND completed_status = '1'";
-        
-        $existing_transaction = $this->db->query($query, array($user_id, $total_amount));
+        // Generate a random number and modify the phone number
+        $random_number = rand(100, 999);  // Generate random number
+        $phonenumber = ltrim($phone_number, '0');  // Remove leading zero from phone number
+        $phonenumbers = $random_number . $phonenumber;
     
-        if ($existing_transaction->num_rows() > 0) {
-            // If the record exists, update the cart status to 4
-            $update_cart_query = "UPDATE cart SET status = 4 WHERE user_id = ?";
-            $this->db->query($update_cart_query, array($user_id));
+        // Generate account number based on customer details
+        // $getCampaignDetails = '8976543045';
+              $customer_id = "01000000168";
+              $getCampaignDetail = $this->generate_account_no($register_name, $phonenumbers, $customer_id);
+              $getCampaignDetails = $getCampaignDetail['account_number'];
     
-            // Return the existing transaction
-            return $existing_transaction->row_array();
-        } else {
-            // Generate a random number and modify the phone number
-            $random_number = rand(100, 999); // Generate random number
-            $phonenumber = ltrim($phone_number, '0'); // Remove leading zero from phone number
-            $phonenumbers = $random_number . $phonenumber;
+        // Insert transaction into database
+        $query1 = "INSERT INTO marvico_food_txn 
+            (user_id, register_name, phonenumber, email, product_items, subtotal, shipping, tax, total_amount, account_no)
+            VALUES ('$user_id', '$register_name', '$phone_number', '$email', '$product_items', '$subtotal', '$shipping', '$tax', '$total_amount', '$getCampaignDetails')";
     
-            // Generate account number based on customer details (can be dynamic if needed)
-            $customer_id = "01000000233";  
-            // For now, hardcode the account number or use a function to generate it
-            $getCampaignDetail = $this->generate_account_no($register_name, $phonenumbers, $customer_id);
-            $getCampaignDetails = $getCampaignDetail['account_number'];
-           // $getCampaignDetails = '8976543045';
-            $complete_status = '1';
-    
-            // SQL Insert Query for new transaction
-            $query1 = "INSERT INTO marvico_food_txn 
-                       (user_id, register_name, phonenumber, email, product_items, subtotal, shipping, tax, total_amount, account_no, completed_status)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    
-            // Execute the Insert Query
-            $this->db->query($query1, array(
-                $user_id, $register_name, $phone_number, $email, 
-                $product_items, $subtotal, $shipping, $tax, 
-                $total_amount, $getCampaignDetails, $complete_status
-            ));
-    
-            // Update the cart status to 4 after inserting the new transaction
-            $update_cart_query = "UPDATE cart SET status = 4 WHERE user_id = ?";
-            $this->db->query($update_cart_query, array($user_id));
-            
-            // Get the last inserted transaction ID
-            $transaction_id = $this->db->insert_id();
-    
-            // SQL Select Query to get the inserted transaction details
-            $query2 = "SELECT register_name, phonenumber, total_amount, account_no 
-                       FROM marvico_food_txn WHERE id = ?";
-            $result = $this->db->query($query2, array($transaction_id));
-    
-            return $result->row_array(); // Return the newly inserted row as an associative array
+        $this->db->query($query1);
+        $update_cart_query = "UPDATE cart SET status = 4 WHERE user_id = ?";
+        if (!$this->db->query($update_cart_query, array($user_id))) {
+            // Log an error message if the update fails
+            log_message('error', 'Cart status update failed for user_id: ' . $user_id);
         }
+        // Fetch the inserted transaction for verification or return
+        $query = "SELECT user_id, register_name, phonenumber, email,subtotal, shipping, tax, total_amount, account_no FROM marvico_food_txn ORDER BY id DESC LIMIT 1";  // Fetch the latest transaction
+        return $this->db->query($query)->row();
     }
     
+
+
     
     
     
